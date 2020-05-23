@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "Engine/TriggerVolume.h"
 #include "Engine/World.h"
+#include "Components/PrimitiveComponent.h"
 #include "OpenDoor.generated.h"
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -21,16 +22,15 @@ class BUILDINGESCAPE_API UOpenDoor : public UActorComponent
 		// Called when the game starts
 		virtual void BeginPlay() override;
 
-		void OpenDoor();
-
 	public:	
 		// Called every frame
-		virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-		void CloseDoor();
+		virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;		
 
 	private:
 		AActor* Owner;
+		void OpenDoor();
+		void CloseDoor();
+		float GetTotalMassOfActorsOnPlate();
 
 		//0 = Wide Open
 		UPROPERTY(EditAnywhere)
@@ -42,8 +42,10 @@ class BUILDINGESCAPE_API UOpenDoor : public UActorComponent
 		UPROPERTY(EditAnywhere)
 			float DoorCloseDelay = 0.5f;
 
+		UPROPERTY(EditAnywhere)
+			float TriggerMass = 50.0f;
+
 		float LastDoorOpenTime = 0.0f;
 		FRotator DoorStartRotation;
 
-		AActor* ActorThatOpens;
 };

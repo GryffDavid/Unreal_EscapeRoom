@@ -1,10 +1,9 @@
 
 // (C) Copyright Gryffydd David 2019
-
-
 #include "Grabber.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/PlayerController.h"
+
 
 // Sets default values for this component's properties
 UGrabber::UGrabber()
@@ -28,26 +27,16 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(OUT viewPointLocation, OUT viewPointRotation);
-	FVector LineTraceEnd = viewPointLocation + (viewPointRotation.Vector() * Reach);
-
 	if (PhysicsHandle->GrabbedComponent)
 	{		
-		PhysicsHandle->SetTargetLocation(LineTraceEnd);
+		PhysicsHandle->SetTargetLocation(GetReachLineEnd());
 	}
 }
 
-
+//Check if there is a physics handle to use
 void UGrabber::FindPhysicsHandleComponent()
 {
-	if (PhysicsHandle)
-	{
-		UE_LOG(
-			LogTemp,
-			Warning,
-			TEXT("Physics handle for %s found: %s"), *GetOwner()->GetName(), *PhysicsHandle->GetName());
-	}
-	else
+	if (!PhysicsHandle)
 	{
 		UE_LOG(
 			LogTemp,
@@ -57,18 +46,13 @@ void UGrabber::FindPhysicsHandleComponent()
 	}
 }
 
+//Define keys/buttons that are used to activate the Grab and Release functions
 void UGrabber::SetupInputComponent()
 {
 	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
 
 	if (InputComponent)
 	{
-		UE_LOG(
-			LogTemp,
-			Warning,
-			TEXT("Input component for %s found: %s"), *GetOwner()->GetName(), *InputComponent->GetName());
-
-		//Bind the input axis
 		InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
 		InputComponent->BindAction("Grab", IE_Released, this, &UGrabber::Release);
 	}
@@ -84,46 +68,36 @@ void UGrabber::SetupInputComponent()
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 }
 
-
+//Attach the physics handle to the actor the player is looking at
 void UGrabber::Grab()
 {
-	GetFirstPhysicsBodyInReach();
-	auto HitResult = GetFirstPhysicsBodyInReach();
+	FHitResult HitResult = GetFirstPhysicsBodyInReach();
 	auto ComponentToGrab = HitResult.GetComponent();
-	AActor* ActorHit = HitResult.GetActor();
 
-
-
-	if (ActorHit != nullptr)
+	if (HitResult.GetActor() != nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Looking at: %s"), *(ActorHit->GetName()));
-		//PhysicsHandle->GrabComponent(ComponentToGrab, NAME_None, ComponentToGrab->GetOwner()->GetActorLocation(), true);
+		//Attach the physics handle to the thing the player is looking at
 		PhysicsHandle->GrabComponentAtLocationWithRotation(ComponentToGrab, NAME_None, ComponentToGrab->GetOwner()->GetActorLocation(), ComponentToGrab->GetOwner()->GetActorRotation());
-		UE_LOG(LogTemp, Warning, TEXT("Grabbed!"));
 	}
-
-	
 }
 
+//Release the actor the player is holding
 void UGrabber::Release()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Released!"));
 	PhysicsHandle->ReleaseComponent();
 }
 
+//Return the first physics body along the players line of sight
 const FHitResult UGrabber::GetFirstPhysicsBodyInReach()
 {
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(OUT viewPointLocation, OUT viewPointRotation);
-
-	FVector LineTraceEnd = viewPointLocation + (viewPointRotation.Vector() * Reach);
-
+	//Ignore the player itself when deciding what's being looked at
 	FCollisionQueryParams TraceParams(FName(TEXT("")), false, GetOwner());
 
 	FHitResult HitResult;
 	GetWorld()->LineTraceSingleByObjectType(
 		OUT HitResult,
 		viewPointLocation,
-		LineTraceEnd,
+		GetReachLineEnd(),
 		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
 		TraceParams
 	);
@@ -131,3 +105,11 @@ const FHitResult UGrabber::GetFirstPhysicsBodyInReach()
 	return HitResult;
 }
 
+FVector UGrabber::GetReachLineEnd()
+{
+	//Where is the player and what are they looking at?
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(OUT viewPointLocation, OUT viewPointRotation);
+
+	//Return a line extending out from the player along their viewing vector
+	return viewPointLocation + (viewPointRotation.Vector() * Reach);
+}

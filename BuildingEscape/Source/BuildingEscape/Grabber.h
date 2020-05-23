@@ -46,4 +46,5 @@ class BUILDINGESCAPE_API UGrabber : public UActorComponent
 		void Grab();
 		void Release();
 		const FHitResult GetFirstPhysicsBodyInReach();
+		FVector GetReachLineEnd();
 };

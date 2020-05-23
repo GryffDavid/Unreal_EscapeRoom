@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
+#include "PhysicsEngine/PhysicsHandleComponent.h"
+#include "Components/PrimitiveComponent.h"
 
 #include "Grabber.generated.h"
 
@@ -24,6 +26,10 @@ class BUILDINGESCAPE_API UGrabber : public UActorComponent
 		// Called when the game starts
 		virtual void BeginPlay() override;
 
+		void FindPhysicsHandleComponent();
+
+		void SetupInputComponent();
+
 	public:	
 		// Called every frame
 		virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -34,4 +40,10 @@ class BUILDINGESCAPE_API UGrabber : public UActorComponent
 
 		UPROPERTY(EditAnywhere)
 		float Reach = 100.f;
+
+		UPhysicsHandleComponent* PhysicsHandle = nullptr;
+		UInputComponent* InputComponent = nullptr;
+		void Grab();
+		void Release();
+		const FHitResult GetFirstPhysicsBodyInReach();
 };

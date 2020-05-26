@@ -27,22 +27,30 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	//FindPhysicsHandleComponent();
+
+	if (!PhysicsHandle) 
+	{
+		return;
+	}
+
 	if (PhysicsHandle->GrabbedComponent)
 	{		
 		PhysicsHandle->SetTargetLocation(GetReachLineEnd());
 	}
 }
 
-//Check if there is a physics handle to use
+//Check if there is a physics handle to use. Make sure it isn't nullptr
 void UGrabber::FindPhysicsHandleComponent()
 {
+	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
+
 	if (!PhysicsHandle)
 	{
 		UE_LOG(
 			LogTemp,
 			Error,
 			TEXT("%s is missing physics handle"), *GetOwner()->GetName());
-
 	}
 }
 
@@ -64,8 +72,6 @@ void UGrabber::SetupInputComponent()
 			TEXT("%s is missing input component"), *GetOwner()->GetName());
 
 	}
-
-	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 }
 
 //Attach the physics handle to the actor the player is looking at
@@ -77,14 +83,18 @@ void UGrabber::Grab()
 	if (HitResult.GetActor() != nullptr)
 	{
 		//Attach the physics handle to the thing the player is looking at
-		PhysicsHandle->GrabComponentAtLocationWithRotation(ComponentToGrab, NAME_None, ComponentToGrab->GetOwner()->GetActorLocation(), ComponentToGrab->GetOwner()->GetActorRotation());
+		if (PhysicsHandle)
+			PhysicsHandle->GrabComponentAtLocationWithRotation(ComponentToGrab, NAME_None, ComponentToGrab->GetOwner()->GetActorLocation(), ComponentToGrab->GetOwner()->GetActorRotation());
+		else
+			FindPhysicsHandleComponent();
 	}
 }
 
 //Release the actor the player is holding
 void UGrabber::Release()
 {
-	PhysicsHandle->ReleaseComponent();
+	if (PhysicsHandle)
+		PhysicsHandle->ReleaseComponent();
 }
 
 //Return the first physics body along the players line of sight

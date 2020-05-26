@@ -26,7 +26,6 @@ void UOpenDoor::BeginPlay()
 	Owner = GetOwner();
 
 	DoorStartRotation = Owner->GetActorRotation();
-	//ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
 }
 
 void UOpenDoor::OpenDoor()
@@ -66,12 +65,15 @@ float UOpenDoor::GetTotalMassOfActorsOnPlate()
 	float TotalMass = 0.0f;
 
 	//Find all overlapping actors
-	TArray<AActor*> OverlappingActors;
-	PressurePlate->GetOverlappingActors(OUT OverlappingActors);
-
-	for (auto& actor : OverlappingActors)
+	if (PressurePlate)
 	{
-		TotalMass += actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+		TArray<AActor*> OverlappingActors;
+		PressurePlate->GetOverlappingActors(OUT OverlappingActors);
+
+		for (auto& actor : OverlappingActors)
+		{
+			TotalMass += actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+		}
 	}
 
 	return TotalMass;

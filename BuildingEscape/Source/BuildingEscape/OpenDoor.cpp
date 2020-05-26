@@ -20,24 +20,7 @@ UOpenDoor::UOpenDoor()
 void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
-
 	Owner = GetOwner();
-
-	DoorStartRotation = Owner->GetActorRotation();
-}
-
-void UOpenDoor::OpenDoor()
-{	
-	if (Owner->GetActorRotation().Yaw > DoorStartRotation.Yaw + OpenAngle)
-		Owner->AddActorLocalRotation(FRotator(0.0f, -1.0, 0.0f));
-}
-
-void UOpenDoor::CloseDoor()
-{
-	if (Owner->GetActorRotation().Yaw < DoorStartRotation.Yaw)
-		Owner->AddActorLocalRotation(FRotator(0.0f, 4.0, 0.0f));
 }
 
 // Called every frame
@@ -49,13 +32,11 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	//if (PressurePlate->IsOverlappingActor(ActorThatOpens))
 	if (GetTotalMassOfActorsOnPlate() > TriggerMass)
 	{
-		OpenDoor();
-		LastDoorOpenTime = GetWorld()->GetTimeSeconds();
+		OnOpenRequest.Broadcast();
 	}
-
-	if (GetWorld()->GetTimeSeconds() >= LastDoorOpenTime + DoorCloseDelay)
+	else
 	{
-		CloseDoor();
+		OnCloseRequest.Broadcast();
 	}
 }
 
